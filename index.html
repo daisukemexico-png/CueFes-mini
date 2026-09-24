@@ -27,6 +27,8 @@
   .brand .mark{flex:0 0 auto;display:block;height:34px;width:auto;}
   .brand .wordmark{display:flex;flex-direction:column;gap:1px;padding-top:2px;}
   .brand .wordmark .tagline{color:var(--muted);font-size:11.5px;letter-spacing:.01em;}
+  #clientLabelInput{outline:none;border-bottom:1px dashed transparent;}
+  #clientLabelInput:hover, #clientLabelInput:focus{border-bottom-color:var(--accent2);}
   .storage-note{padding:7px 24px;background:var(--panel2);color:var(--muted);font-size:11.5px;border-bottom:1px solid var(--border);}
   nav.tabs{display:flex;flex-direction:column;padding:4px 24px;background:var(--panel);border-bottom:1px solid var(--border);}
   nav.tabs .tab-row{display:flex;align-items:center;gap:2px;flex-wrap:wrap;}
@@ -245,6 +247,10 @@
   .ocr-candidate-times{display:flex;gap:10px;}
   .ocr-candidate-times>div{flex:1;}
   .ocr-candidate-raw{margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ocr-corrected-note{
+    font-size:11.5px;color:var(--ok);background:#1c7a4512;border:1px solid #1c7a4540;
+    border-radius:6px;padding:5px 8px;margin-bottom:8px;
+  }
 
   /* ==========================================================================
      Touch / tablet / phone support.
@@ -367,6 +373,7 @@
     <img class="mark" id="hdrTitle" alt="CueFes" height="34" title="アーティスト管理に戻る" style="cursor:pointer;" src="data:image/png;base64,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">
     <div class="wordmark">
       <div class="tagline">出演者連絡ツール（アーティスト取り込み・入り時間連絡）</div>
+      <input type="text" id="clientLabelInput" placeholder="納品先の会社名（例：株式会社トイプラ専用）" style="margin-top:3px;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--accent2);padding:2px 0;width:220px;">
     </div>
   </div>
   <div class="row">
@@ -618,6 +625,17 @@
           </div>
           <div class="row" style="margin-top:8px;">
             <button class="btn" id="btnOcrParse">候補を抽出してプレビュー</button>
+          </div>
+
+          <hr style="margin:16px 0;border:none;border-top:1px solid var(--border);">
+          <label>登録済みの正しい表記（OCRの誤読を自動補正）</label>
+          <p class="helptext">
+            読み取りにくい記号（☆♩°★など）や複雑な漢字を含むグループ名をあらかじめ登録しておくと、OCRが多少違う文字で読み取っても、登録した正しい表記に自動で直ります。納品先が変わったら、この一覧を入れ替えてください。
+          </p>
+          <div id="knownNamesListWrap" style="margin-bottom:8px;"></div>
+          <div class="row">
+            <input type="text" id="knownNameAddInput" placeholder="例：煌めき☆アンフォレント" style="flex:1;">
+            <button class="btn secondary" id="btnKnownNameAdd">＋ 追加</button>
           </div>
         </div>
       </details>
@@ -953,6 +971,79 @@
   const STORAGE_KEY_V1 = "idolfes_timetable_v1_callsheet";
   const ARTIST_HISTORY_KEY = "cuefes_artist_history_v1_callsheet";
   const ARTIST_MASTER_KEY = "cuefes_artist_master_v1_callsheet";
+  // ---------- Client branding label (per-deployment, shown next to the logo) ----------
+  const CLIENT_LABEL_KEY = "cuefes_client_label_callsheet";
+  function getClientLabel(){
+    try{
+      const saved = localStorage.getItem(CLIENT_LABEL_KEY);
+      return saved!==null ? saved : "株式会社トイプラ専用";
+    }catch(e){ return "株式会社トイプラ専用"; }
+  }
+  function setClientLabel(v){
+    try{ localStorage.setItem(CLIENT_LABEL_KEY, v); }catch(e){ /* ignore */ }
+  }
+
+  // ---------- Known artist names (OCR misread auto-correction) ----------
+  // A per-deployment editable list of "correct" spellings. When OCR produces
+  // a name that's close-but-not-exact to one of these (garbled kanji, a
+  // dropped ☆/♩/° symbol, etc.), it gets snapped to the registered spelling
+  // automatically, since these are exactly the characters free OCR tends to
+  // stumble on (ornamental symbols, less common kanji). New deployments to a
+  // different company just need their own roster typed in here — nothing to
+  // edit in code.
+  const KNOWN_NAMES_KEY = "cuefes_known_artist_names_callsheet";
+  const DEFAULT_KNOWN_NAMES = ["煌めき☆アンフォレント", "彗星♩dropTune°", "綺星★フィオレナード"];
+  function getKnownArtistNames(){
+    try{
+      const raw = localStorage.getItem(KNOWN_NAMES_KEY);
+      if(raw){
+        const parsed = JSON.parse(raw);
+        if(Array.isArray(parsed)) return parsed;
+      }
+    }catch(e){ /* fall through */ }
+    return DEFAULT_KNOWN_NAMES.slice();
+  }
+  function setKnownArtistNames(list){
+    try{ localStorage.setItem(KNOWN_NAMES_KEY, JSON.stringify(list)); }catch(e){ /* ignore */ }
+  }
+  // Standard Levenshtein edit distance (character insert/delete/substitute),
+  // used to judge how close an OCR misread is to a registered name.
+  function levenshteinDistance(a, b){
+    const m = a.length, n = b.length;
+    if(m===0) return n;
+    if(n===0) return m;
+    const dp = new Array(n+1);
+    for(let j=0;j<=n;j++) dp[j] = j;
+    for(let i=1;i<=m;i++){
+      let prev = dp[0];
+      dp[0] = i;
+      for(let j=1;j<=n;j++){
+        const temp = dp[j];
+        dp[j] = Math.min(dp[j]+1, dp[j-1]+1, prev + (a[i-1]===b[j-1] ? 0 : 1));
+        prev = temp;
+      }
+    }
+    return dp[n];
+  }
+  // Snaps `name` to the closest registered name if they're close enough to
+  // plausibly be the same OCR misread — up to ~34% of the longer string's
+  // character count may differ. Returns {name, corrected} rather than just
+  // the string, so the caller can flag when a substitution actually happened
+  // (never silently swap text without a visible marker the user can check).
+  function correctKnownArtistName(name){
+    if(!name) return { name, corrected:false };
+    const known = getKnownArtistNames();
+    let best = null, bestDist = Infinity;
+    known.forEach(k=>{
+      if(!k || k===name) return;
+      const dist = levenshteinDistance(name, k);
+      if(dist < bestDist){ bestDist = dist; best = k; }
+    });
+    if(!best) return { name, corrected:false };
+    const threshold = Math.max(1, Math.floor(Math.max(name.length, best.length) * 0.34));
+    if(bestDist<=threshold) return { name:best, corrected:true, original:name };
+    return { name, corrected:false };
+  }
   const PALETTE = ["#ffb3c6","#b3e5ff","#c8f7c5","#ffe3a3","#d9b3ff","#ffc9de","#a3f0e0",
                     "#ffd6a3","#b3c6ff","#f7c5e0","#c5e8f7","#e0f7c5"];
   const STAFF_TASK_COLOR = "#dbe4ea"; // neutral blue-gray, distinct from the artist pastel PALETTE
@@ -1752,13 +1843,15 @@
       return;
     }
     rows.forEach(r=>{
+      const correction = correctKnownArtistName(r.name);
       const card = document.createElement("div");
       card.className = "ocr-candidate-card";
       card.innerHTML = `
         <div class="ocr-candidate-top">
           <input type="checkbox" data-role="include" checked style="width:auto;flex:0 0 auto;">
-          <input type="text" data-role="name" value="${escapeAttr(r.name)}" list="artistNameList" autocomplete="off" placeholder="アーティスト名" style="flex:1;font-weight:700;font-size:15px;">
+          <input type="text" data-role="name" value="${escapeAttr(correction.name)}" list="artistNameList" autocomplete="off" placeholder="アーティスト名" style="flex:1;font-weight:700;font-size:15px;">
         </div>
+        ${correction.corrected ? `<div class="ocr-corrected-note">読み取り結果「${escapeHtml(correction.original)}」を、登録済みの名前「${escapeHtml(correction.name)}」に自動補正しました。違う場合は上の欄を書き換えてください。</div>` : ""}
         <div class="ocr-candidate-fields">
           <div><label>ステージ/会場（未使用の場合は空欄でOK）</label><input type="text" data-role="lane" value="${escapeAttr(r.lane)}"></div>
           <div class="ocr-candidate-times">
@@ -4927,6 +5020,52 @@
       const target = document.querySelector('input[name="ocrTarget"]:checked').value;
       document.getElementById("ocrTargetHelp").style.display = target==="calltime" ? "block" : "none";
     });
+  });
+
+  // ---------- Known artist names (OCR correction list) UI ----------
+  function renderKnownNamesList(){
+    const wrap = document.getElementById("knownNamesListWrap");
+    if(!wrap) return;
+    const names = getKnownArtistNames();
+    if(names.length===0){
+      wrap.innerHTML = `<div class="helptext">まだ登録されていません。</div>`;
+      return;
+    }
+    wrap.innerHTML = names.map((n,i)=>`
+      <div class="row" style="align-items:center;margin-bottom:4px;">
+        <span style="flex:1;font-size:13px;">${escapeHtml(n)}</span>
+        <button type="button" class="del-btn" data-idx="${i}" title="削除">✕</button>
+      </div>`).join("");
+    wrap.querySelectorAll(".del-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const idx = parseInt(btn.dataset.idx,10);
+        const list = getKnownArtistNames();
+        list.splice(idx,1);
+        setKnownArtistNames(list);
+        renderKnownNamesList();
+      });
+    });
+  }
+  document.getElementById("btnKnownNameAdd").addEventListener("click", ()=>{
+    const input = document.getElementById("knownNameAddInput");
+    const name = input.value.trim();
+    if(!name) return;
+    const list = getKnownArtistNames();
+    if(!list.includes(name)) list.push(name);
+    setKnownArtistNames(list);
+    input.value = "";
+    renderKnownNamesList();
+  });
+  document.getElementById("knownNameAddInput").addEventListener("keydown", ev=>{
+    if(ev.key==="Enter"){ ev.preventDefault(); document.getElementById("btnKnownNameAdd").click(); }
+  });
+  renderKnownNamesList();
+
+  // ---------- Client branding label (next to the logo) ----------
+  const clientLabelInput = document.getElementById("clientLabelInput");
+  clientLabelInput.value = getClientLabel();
+  clientLabelInput.addEventListener("change", ()=>{
+    setClientLabel(clientLabelInput.value.trim());
   });
 
   document.getElementById("btnBackupExport").addEventListener("click", ()=>{
