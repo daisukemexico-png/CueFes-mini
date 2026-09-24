@@ -516,7 +516,7 @@
 
   <!-- ============ TAB: ARTISTS ============ -->
   <div class="tabcontent active" id="tab-artists">
-    <div class="card">
+    <div class="card" style="display:none;">
       <h2>CSVで一括インポート／エクスポート</h2>
       <div class="row" style="margin-bottom:10px;">
         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);width:auto;">
@@ -562,40 +562,23 @@
     </div>
 
     <div class="card">
-      <h2>テキスト／画像から一括取り込み</h2>
+      <h2>画像から出演者を読み取る</h2>
       <p class="helptext">
-        出演者一覧をまとめて取り込めます。下のテキスト欄に<b>Twitter(X)の告知文やLINEでもらったテキストなどをそのまま貼り付けて</b>「候補を抽出」を押すだけでOKです（画像は使いません）。<br>
-        手元にあるのが画像だけの場合は、下の画像アップロード欄からOCR（文字認識）でテキスト化することもできます。
+        出演者一覧が書かれたフライヤーや、時刻表の写真・スクリーンショットを選ぶだけで、名前と時間を自動で読み取ります。下のボタンを押すと、スマホなら「写真を撮る」か「アルバムから選ぶ」かを選べます。
       </p>
-
-      <div class="row" style="margin-top:4px;margin-bottom:4px;">
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);width:auto;"><input type="radio" name="ocrParseMode" value="time" checked style="width:auto;">時刻付きテキストから取り込む</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);width:auto;"><input type="radio" name="ocrParseMode" value="nameonly" style="width:auto;">アーティスト名だけを取り込む（時刻・ステージは後で手動入力）</label>
-      </div>
-      <p class="helptext" id="ocrParseModeHelp">
-        認識のコツ：「10:30-11:00 グループ名」のように<b>1行に時刻＋アーティスト名</b>が入っている形式が最も正確です。「Aステージ」のような行を挟むと、それ以降の行に自動でステージ名が割り当てられます。<br>
-        「13:40~14:00(20)」のように時刻の後ろに<b>尺（分）が括弧書きされている場合</b>は自動で無視されます。また「時刻＋尺」の行の次にアーティスト名だけの行が続く2行形式にも対応しています。
-      </p>
-
-      <div style="margin-top:4px;">
-        <label>① ここにテキストを貼り付ける（またはOCRで自動入力）</label>
-        <textarea id="ocrRawText" rows="8" style="font-family:monospace;" placeholder="例：&#10;Aステージ&#10;10:00-10:30 サンプル☆ガールズ&#10;10:30-11:00 キラキラユニット&#10;Bステージ&#10;10:00-10:30 ネオン戦隊"></textarea>
-      </div>
-      <div class="row" style="margin-top:8px;">
-        <button class="btn" id="btnOcrParse">→ ② 候補を抽出してプレビュー</button>
+      <label class="btn" id="btnOcrBig" style="display:flex;align-items:center;justify-content:center;text-align:center;font-size:17px;font-weight:700;padding:22px 16px;cursor:pointer;width:100%;box-sizing:border-box;">
+        写真を撮る・画像を選ぶ
+        <input type="file" id="ocrFileInput" accept="image/*" capture="environment" style="display:none;">
+      </label>
+      <div id="ocrPreviewImgWrap" style="margin-top:10px;text-align:center;"></div>
+      <div class="helptext" id="ocrStatus" style="margin-top:8px;"></div>
+      <div class="row" style="margin-top:10px;">
+        <button class="btn secondary" id="btnOcrRun" disabled>もう一度この画像を解析する</button>
       </div>
 
-      <details style="margin-top:14px;" open>
-        <summary style="cursor:pointer;color:var(--accent2);font-size:13px;">画像から文字を読み取る（OCR・実験的機能／要ネット接続）</summary>
+      <details style="margin-top:16px;">
+        <summary style="cursor:pointer;color:var(--accent2);font-size:13px;">読み取りの詳細設定・テキストから直接取り込む場合はこちら</summary>
         <div style="margin-top:10px;">
-          <p class="helptext">
-            出演者一覧が書かれたフライヤーやスクリーンショット画像から文字を自動抽出し、上のテキスト欄に入力します。無料のOCR技術のため、手書き文字やデザイン性の高い画像は誤読が発生します。抽出結果は必ず確認・修正してください。<br>
-            ※OCRの実行時のみインターネット接続が必要です（それ以外のアプリ機能はオフラインで動作します）。
-          </p>
-          <div class="row">
-            <input type="file" id="ocrFileInput" accept="image/*" capture="environment" style="width:auto;">
-            <button class="btn secondary" id="btnOcrRun" disabled>画像を解析してテキスト抽出</button>
-          </div>
           <div class="row" style="margin-top:8px;">
             <label style="width:auto;">読み取りレイアウト</label>
             <select id="ocrPsmSelect" style="width:260px;">
@@ -606,8 +589,24 @@
           <div class="helptext">
             「1列として読み取る」を選ぶと、横に並んだ複数ステージ分の情報が混ざらず、画像を1本の縦の列として上から順番に読み取ろうとします。並び順がおかしくなる場合はこちらを、逆に文章がうまく拾えない場合は「自動判定」をお試しください。
           </div>
-          <div id="ocrPreviewImgWrap" style="margin-top:10px;"></div>
-          <div class="helptext" id="ocrStatus" style="margin-top:8px;"></div>
+          <p class="helptext" style="margin-top:12px;">
+            画像がなく、テキスト（Twitter(X)の告知文やLINEでもらった文章など）をそのまま貼り付けたい場合は、下の欄に貼り付けて「候補を抽出」を押してください。
+          </p>
+          <div class="row" style="margin-top:4px;margin-bottom:4px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);width:auto;"><input type="radio" name="ocrParseMode" value="time" checked style="width:auto;">時刻付きテキストから取り込む</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);width:auto;"><input type="radio" name="ocrParseMode" value="nameonly" style="width:auto;">アーティスト名だけを取り込む（時刻・ステージは後で手動入力）</label>
+          </div>
+          <p class="helptext" id="ocrParseModeHelp">
+            認識のコツ：「10:30-11:00 グループ名」のように<b>1行に時刻＋アーティスト名</b>が入っている形式が最も正確です。「Aステージ」のような行を挟むと、それ以降の行に自動でステージ名が割り当てられます。<br>
+            「13:40~14:00(20)」のように時刻の後ろに<b>尺（分）が括弧書きされている場合</b>は自動で無視されます。また「時刻＋尺」の行の次にアーティスト名だけの行が続く2行形式にも対応しています。
+          </p>
+          <div style="margin-top:4px;">
+            <label>ここにテキストを貼り付ける（またはOCRで自動入力されます）</label>
+            <textarea id="ocrRawText" rows="8" style="font-family:monospace;" placeholder="例：&#10;Aステージ&#10;10:00-10:30 サンプル☆ガールズ&#10;10:30-11:00 キラキラユニット&#10;Bステージ&#10;10:00-10:30 ネオン戦隊"></textarea>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <button class="btn" id="btnOcrParse">候補を抽出してプレビュー</button>
+          </div>
         </div>
       </details>
 
@@ -1585,7 +1584,14 @@
       await worker.setParameters({ tessedit_pageseg_mode: psm, preserve_interword_spaces: "1" });
       const result = await worker.recognize(file);
       document.getElementById("ocrRawText").value = (result.data && result.data.text) ? result.data.text : "";
-      statusEl.textContent = "✓ 解析完了。テキストを確認・修正してから「候補を抽出」を押してください。";
+      statusEl.textContent = "✓ 解析完了。下の候補一覧を確認・修正してください。";
+      // Auto-extract candidates right away — on a phone, requiring a second
+      // trip into the (collapsed) details section just to press "候補を抽出"
+      // is one tap too many for what should be a single "pick a photo" flow.
+      const mode = document.querySelector('input[name="ocrParseMode"]:checked').value;
+      const text = document.getElementById("ocrRawText").value;
+      const rows = mode==="nameonly" ? parseNameOnlyText(text) : parseOcrText(text);
+      renderOcrPreview(rows, mode);
     }catch(e){
       console.error(e);
       statusEl.textContent = "解析に失敗しました: "+e.message;
@@ -4851,6 +4857,11 @@
       img.style.maxWidth = "260px"; img.style.maxHeight = "200px";
       img.style.borderRadius = "8px"; img.style.border = "1px solid var(--border)";
       wrap.appendChild(img);
+      // Run immediately — no extra tap needed for the common case of picking
+      // one photo and reading it straight away. "もう一度解析する" stays
+      // available below in case they want to retry (e.g. after switching
+      // the layout setting) without re-picking the same image.
+      runOcr(f);
     }
   });
   document.getElementById("btnOcrRun").addEventListener("click", ()=>{
