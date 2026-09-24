@@ -236,6 +236,15 @@
   .onboarding-step.done .onboarding-check{color:var(--ok);}
   .onboarding-check{font-weight:700;width:16px;text-align:center;color:var(--accent2);flex:0 0 auto;}
   .empty-state-cta{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:16px;}
+  .ocr-candidate-card{
+    border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--panel2);
+  }
+  .ocr-candidate-top{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .ocr-candidate-fields{display:flex;flex-direction:column;gap:8px;}
+  .ocr-candidate-fields label{font-size:11px;color:var(--muted);}
+  .ocr-candidate-times{display:flex;gap:10px;}
+  .ocr-candidate-times>div{flex:1;}
+  .ocr-candidate-raw{margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
   /* ==========================================================================
      Touch / tablet / phone support.
@@ -571,7 +580,10 @@
         <input type="file" id="ocrFileInput" accept="image/*" style="display:none;">
       </label>
       <div id="ocrPreviewImgWrap" style="margin-top:10px;text-align:center;"></div>
-      <div class="helptext" id="ocrStatus" style="margin-top:8px;"></div>
+      <div id="ocrStatusBox" style="display:none;margin-top:10px;padding:12px 14px;border-radius:10px;background:var(--accent2-soft);border:1px solid var(--accent2);">
+        <div id="ocrStatus" style="font-size:14px;font-weight:700;color:var(--accent2);"></div>
+        <div class="helptext" style="margin-top:4px;">初回はデータの読み込みで30秒〜1分ほどかかることがあります。この画面のまま、閉じずにお待ちください。</div>
+      </div>
       <div class="row" style="margin-top:10px;">
         <button class="btn secondary" id="btnOcrRun" disabled>もう一度この画像を解析する</button>
       </div>
@@ -625,13 +637,8 @@
             </div>
           </div>
         </div>
-        <p class="helptext" id="ocrTargetHelp" style="display:none;">「入り時間」を選ぶと、各行の時刻がそのまま入り時間として取り込まれます（範囲ではなく単発の時刻で構いません）。ステージ・特典会場の割り当ては行われません。</p>
-        <div style="overflow-x:auto;">
-          <table class="data" id="ocrPreviewTable">
-            <thead><tr><th></th><th id="ocrLaneHeader">ステージ/会場</th><th>アーティスト名</th><th id="ocrStartHeader">開始</th><th id="ocrEndHeader">終了</th><th>元のテキスト行</th></tr></thead>
-            <tbody id="ocrPreviewBody"></tbody>
-          </table>
-        </div>
+        <p class="helptext" id="ocrTargetHelp" style="display:none;">「入り時間」を選ぶと、各カードの「開始／入り時間」欄がそのまま入り時間として取り込まれます（範囲ではなく単発の時刻で構いません）。「終了」欄・ステージ/会場欄は使われません。ステージ・特典会場の割り当ては行われません。</p>
+        <div id="ocrPreviewBody"></div>
         <div class="row" style="margin-top:10px;">
           <button class="btn" id="btnOcrCommit">✓ ④ チェックした候補を一括でアーティスト一覧に追加</button>
         </div>
@@ -1566,25 +1573,40 @@
     return ocrWorkerPromise;
   }
 
+  // Wraps the small #ocrStatus text with an always-visible colored box while
+  // work is in progress, so "nothing seems to be happening" (the most likely
+  // read on a stalled/slow OCR run on a phone) is never ambiguous — either
+  // the box is showing live progress, or it's showing a plain-language error,
+  // never just silence.
+  function setOcrStatus(text, isError){
+    const box = document.getElementById("ocrStatusBox");
+    const el = document.getElementById("ocrStatus");
+    if(!text){ box.style.display = "none"; return; }
+    box.style.display = "block";
+    el.textContent = text;
+    box.style.background = isError ? "#fdeceb" : "var(--accent2-soft)";
+    box.style.borderColor = isError ? "var(--danger)" : "var(--accent2)";
+    el.style.color = isError ? "var(--danger)" : "var(--accent2)";
+  }
+
   async function runOcr(file){
     const statusEl = document.getElementById("ocrStatus");
     ocrStatusElRef = statusEl;
-    statusEl.textContent = "OCRエンジンを読み込み中…（初回はネット接続が必要です）";
+    setOcrStatus("① OCRエンジンを読み込み中…（初回はネット接続が必要です。30秒〜1分ほどかかることがあります）");
     let worker;
     try{
       worker = await getOcrWorker();
     }catch(e){
       ocrWorkerPromise = null;
-      statusEl.textContent = "OCRエンジンの読み込みに失敗しました。インターネット接続を確認してください。";
+      setOcrStatus("OCRエンジンの読み込みに失敗しました。電波の良い場所で、もう一度画像を選び直してみてください（Wi-Fiや機内モードのON/OFFも有効な場合があります）。", true);
       return;
     }
     const psm = document.getElementById("ocrPsmSelect").value || "4"; // 4 = 1列として読み取る（SINGLE_COLUMN）
-    statusEl.textContent = "画像を解析中… 0%";
+    setOcrStatus("② 画像を解析中… 0%");
     try{
       await worker.setParameters({ tessedit_pageseg_mode: psm, preserve_interword_spaces: "1" });
       const result = await worker.recognize(file);
       document.getElementById("ocrRawText").value = (result.data && result.data.text) ? result.data.text : "";
-      statusEl.textContent = "✓ 解析完了。下の候補一覧を確認・修正してください。";
       // Auto-extract candidates right away — on a phone, requiring a second
       // trip into the (collapsed) details section just to press "候補を抽出"
       // is one tap too many for what should be a single "pick a photo" flow.
@@ -1592,9 +1614,14 @@
       const text = document.getElementById("ocrRawText").value;
       const rows = mode==="nameonly" ? parseNameOnlyText(text) : parseOcrText(text);
       renderOcrPreview(rows, mode);
+      if(rows.length===0){
+        setOcrStatus("解析は完了しましたが、名前や時刻をうまく読み取れませんでした。画像がはっきり写っているか確認するか、下の「詳細設定」からテキストを直接貼り付けてお試しください。", true);
+      } else {
+        setOcrStatus("✓ 解析完了。下に"+rows.length+"件の候補が出ています。内容を確認・修正してください。");
+      }
     }catch(e){
       console.error(e);
-      statusEl.textContent = "解析に失敗しました: "+e.message;
+      setOcrStatus("解析中にエラーが発生しました： "+e.message+"（もう一度お試しいただくか、別の写真でお試しください）", true);
     }
   }
 
@@ -1714,27 +1741,34 @@
   function renderOcrPreview(rows, mode){
     const wrap = document.getElementById("ocrPreviewWrap");
     fillDaySelect(document.getElementById("ocrDaySelect"), state.days[0].id);
-    const tbody = document.getElementById("ocrPreviewBody");
-    tbody.innerHTML = "";
+    const body = document.getElementById("ocrPreviewBody");
+    body.innerHTML = "";
     if(rows.length===0){
       const emptyMsg = mode==="nameonly"
         ? "アーティスト名として取り込める行が見つかりませんでした。1行に1組ずつ、名前を貼り付けてください。"
-        : "時刻パターン（例: 10:00-10:30）を含む行が見つかりませんでした。上のテキストを「10:00-10:30 グループ名」のような形式に手直しして、もう一度「候補を抽出」を押してください。";
-      tbody.innerHTML = `<tr><td colspan="6" class="helptext">${emptyMsg}</td></tr>`;
+        : "時刻パターン（例: 10:00-10:30 や 10:00）を含む行が見つかりませんでした。上のテキストを手直しして、もう一度「候補を抽出」を押してください。";
+      body.innerHTML = `<div class="helptext">${emptyMsg}</div>`;
       wrap.style.display = "block";
       return;
     }
     rows.forEach(r=>{
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><input type="checkbox" data-role="include" checked style="width:auto;"></td>
-        <td><input type="text" data-role="lane" value="${escapeAttr(r.lane)}" style="width:110px;"></td>
-        <td><input type="text" data-role="name" value="${escapeAttr(r.name)}" list="artistNameList" autocomplete="off" style="min-width:120px;"></td>
-        <td>${timeFieldHtml("start", r.start)}</td>
-        <td>${timeFieldHtml("end", r.end)}</td>
-        <td class="helptext" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeAttr(r.raw)}">${escapeHtml(r.raw)}</td>
+      const card = document.createElement("div");
+      card.className = "ocr-candidate-card";
+      card.innerHTML = `
+        <div class="ocr-candidate-top">
+          <input type="checkbox" data-role="include" checked style="width:auto;flex:0 0 auto;">
+          <input type="text" data-role="name" value="${escapeAttr(r.name)}" list="artistNameList" autocomplete="off" placeholder="アーティスト名" style="flex:1;font-weight:700;font-size:15px;">
+        </div>
+        <div class="ocr-candidate-fields">
+          <div><label>ステージ/会場（未使用の場合は空欄でOK）</label><input type="text" data-role="lane" value="${escapeAttr(r.lane)}"></div>
+          <div class="ocr-candidate-times">
+            <div><label>開始／入り時間</label>${timeFieldHtml("start", r.start)}</div>
+            <div><label>終了</label>${timeFieldHtml("end", r.end)}</div>
+          </div>
+        </div>
+        <div class="helptext ocr-candidate-raw" title="${escapeAttr(r.raw)}">元の行: ${escapeHtml(r.raw)}</div>
       `;
-      tbody.appendChild(tr);
+      body.appendChild(card);
     });
     wrap.style.display = "block";
   }
@@ -1742,7 +1776,7 @@
   function ocrCommitRows(){
     const dayId = document.getElementById("ocrDaySelect").value || state.days[0].id;
     const target = document.querySelector('input[name="ocrTarget"]:checked').value; // "live" | "tokuten" | "calltime"
-    const trs = document.querySelectorAll("#ocrPreviewBody tr");
+    const trs = document.querySelectorAll("#ocrPreviewBody .ocr-candidate-card");
     let added = 0, updated = 0, skipped = 0;
     trs.forEach(tr=>{
       const chk = tr.querySelector('[data-role=include]');
@@ -4850,7 +4884,7 @@
     const wrap = document.getElementById("ocrPreviewImgWrap");
     wrap.innerHTML = "";
     document.getElementById("btnOcrRun").disabled = !f;
-    document.getElementById("ocrStatus").textContent = "";
+    setOcrStatus("");
     if(f){
       const img = document.createElement("img");
       img.src = URL.createObjectURL(f);
@@ -4891,11 +4925,7 @@
   document.querySelectorAll('input[name="ocrTarget"]').forEach(r=>{
     r.addEventListener("change", ()=>{
       const target = document.querySelector('input[name="ocrTarget"]:checked').value;
-      const isCall = target==="calltime";
-      document.getElementById("ocrLaneHeader").textContent = isCall ? "（未使用）" : "ステージ/会場";
-      document.getElementById("ocrStartHeader").textContent = isCall ? "入り時間" : "開始";
-      document.getElementById("ocrEndHeader").textContent = isCall ? "（未使用）" : "終了";
-      document.getElementById("ocrTargetHelp").style.display = isCall ? "block" : "none";
+      document.getElementById("ocrTargetHelp").style.display = target==="calltime" ? "block" : "none";
     });
   });
 
